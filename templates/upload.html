@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload & Processing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        #upload-form {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #image-preview-container {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 20px;
+            border: 2px dashed #aaa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        #image-preview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        #processing-result {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload an Image for Processing</h1>
+
+    <form id="upload-form" action="{{ url_for('upload_image') }}" method="post" enctype="multipart/form-data">
+        <input type="file" id="image-file" name="file" accept="image/jpeg, image/png" required onchange="previewImage(event)">
+        <br>
+        <div id="image-preview-container">
+            <img id="image-preview" src="#" alt="Preview Image">
+        </div>
+        <br>
+        <button type="submit" onclick="processImage(event)">Upload & Process</button>
+    </form>
+
+    <div id="result-container">
+        <h2>Processing Result:</h2>
+        <p id="processing-result"></p>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                var imgElement = document.getElementById('image-preview');
+                imgElement.src = reader.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function processImage(event) {
+            event.preventDefault(); // Prevent form submission and page reload
+            var formData = new FormData();
+            formData.append('file', document.getElementById('image-file').files[0]);
+
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    var resultContainer = document.getElementById('processing-result');
+                    if (xhr.status == 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        resultContainer.innerText = "Processed Image URL: " + response.processed_image_url;
+                    } else {
+                        resultContainer.innerText = "Error: " + xhr.responseText;
+                    }
+                }
+            };
+            xhr.open('POST', '/upload', true);
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>
